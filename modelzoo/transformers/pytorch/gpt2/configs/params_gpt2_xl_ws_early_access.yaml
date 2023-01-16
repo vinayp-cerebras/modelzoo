@@ -3,7 +3,7 @@
 # https://d4mucfpksywv.cloudfront.net/better-language-models/language_models_are_unsupervised_multitask_learners.pdf
 train_input:
     data_processor: "GptHDF5DataProcessor"
-    data_dir: "./owt_pretraining_gpt_hdf5/train_8M_msl1024/"
+    data_dir: "/cb/home/vinayp/sample_dataset_raw_h5"
     vocab_size: 50257
     max_sequence_length: 1024
     # For high utilization in weight streaming, we estimate batch size >96 seqs
@@ -17,7 +17,7 @@ train_input:
 
 eval_input:
     data_processor: "GptHDF5DataProcessor"
-    data_dir: "./owt_pretraining_gpt_hdf5/val_msl1024/"
+    data_dir: "/cb/home/vinayp/sample_dataset_raw_h5"
     vocab_size: 50257
     max_sequence_length: 1024
     batch_size: 95

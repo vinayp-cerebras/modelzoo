@@ -175,7 +175,7 @@ class BertCSVDynamicMaskDataProcessor(torch.utils.data.IterableDataset):
         self.max_sequence_length = params["max_sequence_length"]
         self.max_predictions_per_seq = params["max_predictions_per_seq"]
         self.masked_lm_prob = params.get("masked_lm_prob", 0.15)
-        self.gather_mlm_labels = params.get("gather_mlm_labels", True)
+        self.gather_mlm_labels = params.get("gather_mlm_labels", False)
 
         # Store params.
         self.mp_type = (

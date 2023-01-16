@@ -22,6 +22,7 @@ from modelzoo.transformers.pytorch.bert.input.BertCSVDataProcessor import (  # n
     BertCSVDataProcessor,
 )
 
+from modelzoo.transformers.pytorch.bert.input.Bayer import BayerDataset
 
 def train_input_dataloader(params):
     return getattr(
