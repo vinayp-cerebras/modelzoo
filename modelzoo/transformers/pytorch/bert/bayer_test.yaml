@@ -2,8 +2,8 @@
 
 train_input:
     data_processor: "BayerDataset"
-    data_dir: "/cb/home/vinayp/bayer22/bmlm-bayer-cerebras/sample_data/OAS_allspecies_filtered_clustered095.parquet"
-    vocab_file: "/cb/home/vinayp/bayer22/bmlm-bayer-cerebras/sample_data/bert_vocab.txt"
+    data_dir: "/testshare/vinay/bmlm-bayer-cerebras/sample_data/OAS_allspecies_filtered_clustered095.parquet"
+    vocab_file: "/testshare/vinay/bmlm-bayer-cerebras/sample_data/bert_vocab.txt"
     max_sequence_length: 160
     max_predictions_per_seq: 20
     shuffle: True
@@ -19,8 +19,8 @@ train_input:
 
 eval_input:
     data_processor: "BayerDataset"
-    data_dir: "/cb/home/vinayp/bayer22/sample_dataset_bert_64/train"
-    vocab_file: "/cb/home/vinayp/bayer22/sample_dataset_bert_64/vocab.txt"
+    data_dir: "/testshare/vinay/sample_dataset_bert_64/train"
+    vocab_file: "/testshare/vinay/sample_dataset_bert_64/vocab.txt"
     max_sequence_length: 160
     max_predictions_per_seq: 20
     shuffle: False
