@@ -14,6 +14,11 @@
 
 import sys
 
+from modelzoo.transformers.pytorch.bert.input.BertSyntheticDataset import (  # noqa
+    BertSyntheticDataProcessor,
+)
+
+
 from modelzoo.transformers.pytorch.bert.input.BertCSVDynamicMaskDataProcessor import (  # noqa
     BertCSVDynamicMaskDataProcessor,
 )
