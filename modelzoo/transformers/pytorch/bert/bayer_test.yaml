@@ -2,7 +2,7 @@
 
 train_input:
     data_processor: "BayerDataset"
-    data_dir: "/testshare/vinay/bmlm-bayer-cerebras/sample_data/OAS_allspecies_filtered_clustered095.parquet"
+    data_dir: "/testshare/vinay/bmlm-bayer-cerebras/sample_data/OAS_allspecies_filtered_clustered095.csv"
     vocab_file: "/testshare/vinay/bmlm-bayer-cerebras/sample_data/bert_vocab.txt"
     max_sequence_length: 160
     max_predictions_per_seq: 20
@@ -12,7 +12,7 @@ train_input:
     batch_size: 4
     # batch_size: 4096 # for GPU(16GB) set batch_size: 8
                     # 8 * 32 = 256 with grad_accum_steps: 32
-    num_workers: 4
+    num_workers: 1
     sort_within_batch: True
     prefetch_factor: 10
     persistent_workers: True
