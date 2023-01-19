@@ -70,68 +70,6 @@ def BERTCollate_fn(data, tokenizer=None, max_sequence_length=None, pad_to_max_se
     return dict(minibatch)
 
 
-class CustomDataset2(Dataset):
-    # This class combines the CustomDataset and logic from BERTCollate_fn into a single class
-    # where the getitem returns a dict with the same keys as the output of BERTCollate_fn
-    def __init__(self, data_path, cols, tokenizer, max_sequence_length, pad_to_max_sequence_length=False, mlm_probability=0.15, return_input_seqs=False):
-        self.df = pd.read_csv(data_path, usecols=cols).reset_index(drop=True)
-        self.tokenizer = tokenizer
-        self.max_sequence_length = max_sequence_length
-        self.pad_to_max_sequence_length = pad_to_max_sequence_length
-        self.mlm_probability = mlm_probability
-        self.return_input_seqs = return_input_seqs
-
-
-    def __len__(self):
-        return len(self.df)
-
-    def __getitem__(self, idx):
-        item = self.df.iloc[[idx]].to_dict(orient="records")[0]
-        item = self.tokenizer(item["sequence_aa"].replace("", " ")[1:-1], return_special_tokens_mask=True)
-        # TODO: handle CODON vocab of character triplets
-        item = self.tokenizer.pad(item, return_tensors="pt", pad_to_multiple_of=1)
-        if self.return_input_seqs:
-            item["input_seq"] = self.df.iloc[[idx]]["sequence_aa"]
-        # bs = item["input_ids"].shape[0]
-        padded_length = item["input_ids"].shape[0]
-        item["input_ids"] = item["input_ids"].int()
-        item["attention_mask"] = item["attention_mask"].int()
-        probability_matrix = torch.full(item["input_ids"].shape, self.mlm_probability)
-        probability_matrix.masked_fill_(item["special_tokens_mask"], value=0.0)
-        # TODO: implement variable masking_p based on e.g. FWs/CDRs
-        masked_indices = torch.zeros_like(probability_matrix)
-        while torch.sum(masked_indices) == 0:
-            masked_indices = torch.bernoulli(probability_matrix).bool()
-        max_predictions_per_seq = torch.max(torch.sum(masked_indices))
-        item["masked_lm_positions"] = torch.zeros((max_predictions_per_seq), dtype=torch.int32)
-        item["masked_lm_positions"][:torch.sum(masked_indices)] = torch.nonzero(masked_indices, as_tuple=True)[0]
-        item["masked_lm_weights"] = torch.zeros((max_predictions_per_seq), dtype=torch.float32).fill_(1/torch.sum(masked_indices))
-        # TODO: should the value of masked_lm_weights be set by the config mlm_loss_weight (constant)
-        item["labels"] = item["input_ids"].clone()
-        item["labels"][~masked_indices] = -100
-        # hardcode 80% mask, 10% keep, 10% swap on minibatch["input_ids"]
-        indices_replaced = torch.bernoulli(torch.full(item["input_ids"].shape, 0.8)).bool() & masked_indices
-        item["input_ids"][indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)
-        indices_random = torch.bernoulli(torch.full(item["input_ids"].shape, 0.5)).bool() & masked_indices & ~indices_replaced
-        random_words = torch.randint(len(tokenizer), item["labels"].shape, dtype=torch.int32)
-        item["input_ids"][indices_random] = random_words[indices_random]
-        if self.pad_to_max_sequence_length and padded_length < self.max_sequence_length:
-            item["input_ids"] = torch.cat([item["input_ids"], torch.zeros((bs, self.max_sequence_length-padded_length), dtype=torch.int32)], dim=1)
-            item["attention_mask"] = torch.cat([item["attention_mask"], torch.zeros((bs, self.max_sequence_length-padded_length), dtype=torch.int32)], dim=1)
-            item["labels"] = torch.cat([item["labels"], torch.zeros((bs, self.max_sequence_length-padded_length), dtype=torch.int32).fill_(-100)], dim=1)
-        # we correctly get sequences with BOS/EOS, padded with 0 and attention mask with 0 on padded positions
-        item.pop("special_tokens_mask", None)
-        item.pop("token_type_ids", None)
-        item["masked_lm_mask"] = item["attention_mask"].clone()
-        # TODO: check the needed masked_lm_mask key https://github.com/Cerebras/modelzoo/blob/main/modelzoo/transformers/pytorch/bert/model.py#L192
-        return dict(item)
-
-
-
-
-
-
-
 class BayerDataset():
     def __init__(self, params) -> None:
         self.data_dir = params["data_dir"]
@@ -163,29 +101,4 @@ class BayerDataset():
                                 persistent_workers=self.persistent_workers,
                                 collate_fn=collate_fn
                                 )
-        return dataloader
-
-class BayerAltDataset():
-    def __init__(self, params) -> None:
-        self.data_dir = params["data_dir"]
-        self.vocab_file = params["vocab_file"]
-        self.batch_size = params["batch_size"]
-        self.max_sequence_length = params["max_sequence_length"]
-        self.pad_to_max_sequence_length = params.get("pad_to_max_sequence_length", True)
-        self.masked_lm_prob = params.get("masked_lm_prob", 0.15)
-        self.return_input_seqs = params.get("return_input_seqs", False)
-        self.num_workers = params.get("num_workers", 0)
-        self.persistent_workers = params.get("persistent_workers", False)
-
-    def create_dataloader(self, is_training):
-        tokenizer = BertTokenizer(vocab_file=self.vocab_file, do_lower_case=False)
-        dataset = CustomDataset2(self.data_dir, cols=["sequence_aa"], tokenizer=tokenizer, max_sequence_length=self.max_sequence_length, pad_to_max_sequence_length=self.pad_to_max_sequence_length, mlm_probability=self.masked_lm_prob, return_input_seqs=self.return_input_seqs)
-
-        dataloader = DataLoader(dataset,
-                                batch_size=self.batch_size,
-                                shuffle=False,
-                                num_workers=self.num_workers,
-                                collate_fn=None
-                                )
-
         return dataloader
