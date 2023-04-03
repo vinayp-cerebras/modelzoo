@@ -452,7 +452,7 @@ def split_list(l, n):
     return [l[i : i + n] for i in range(0, len(l), n)]
 
 
-def get_vocab(vocab_file_path, do_lower):
+def get_vocab(vocab_file_path, do_lower=False):
     """
     Function to generate vocab from provided
     vocab_file_path.
@@ -462,6 +462,7 @@ def get_vocab(vocab_file_path, do_lower):
         lower case.
     :returns List[str]: list containing vocab words.
     """
+    do_lower = False
     vocab = []
     with open(vocab_file_path, 'r') as reader:
         for line in reader:
