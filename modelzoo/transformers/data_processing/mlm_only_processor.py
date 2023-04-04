@@ -163,7 +163,7 @@ def data_generator(
 
     # define tokenizer
     # load custom tokenizer!!
-    tokenizer = BertTokenizer.from_pretrained("/data3/tokenizer", clean_text=True, handle_chinese_chars=False, strip_accents=False, lowercase=False)
+    tokenizer = BertTokenizer.from_pretrained("/data3/tokenizer", clean_text=True, handle_chinese_chars=False, strip_accents=False, do_lower_case=False)
     vocab_words = tokenizer.get_vocab().keys()
 
     # if do_lower:
